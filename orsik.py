@@ -46,23 +46,21 @@ async def on_message(msg):
         response = '/`Orsik will respond with In-Character messages in {0}/`'.format(str(targetchannel))
         bot.send_message(msg.channel, response)
 
-    else:
-        return
-
 #In character interactions
-    elif msg.content.startswith('Orsik')
+    elif msg.content.startswith('Orsik'):
         
         user = msg.author
         name = user.display_name
 
-        if targetchannel = 'null' or targetchannel != msg.channel:
-            response = '/`Orsik BOT has not been assigned to this Channel/`'
+        if targetchannel != str(msg.channel):
+            response = '/`Orsik BOT has not been assigned to {}/`'.format(str(targetchannel))
             bot.send_message(msg.channel, response)
+            return
 
-        elif msg.content.startswith('Orsik') and msg.content.find('Flint') and msg.content.find('?'):
+        elif msg.content.find('Flint') and msg.content.find('?'):
             response = 'Flint, not a better Dwarf to fight alongside.'
             
-        elif msg.content.startswith
+        else:
             ya = random.choice(affirm)
             aid = random.choice(assit)
             response =  '{0} {1}, how can I {2} you?'.format(ya.capitalize(), name.capitalize(), aid)
@@ -78,7 +76,7 @@ async def on_message(msg):
 
 #    await bot.send_message(hello)
 
-@bot.command(name='close')
+@bot.command(name='close') #not currently working
 async def close(ctx):
 #    await bot.send_message(ctx.channel, "Closing down folks.")
     await bot.close()
