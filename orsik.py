@@ -18,21 +18,20 @@ def gettoken(file):
     return token
 
 
+
+#Discord setup functions
 bot = discord.Client()
 
-bot_prefix= "q-"
+bot_prefix= "O$"
 
-
+global targetchannel
 targetchannel = 'null' #inital setting prior to in-Discord reset
 
 bot = commands.Bot(command_prefix=bot_prefix)
 
-
-
 #@bot.event
 #async def on_resume():
 #    await bot.send_message(chnl, 'Sorry, drifted off there.')
-
 
 @bot.event
 async def on_message(msg):
@@ -42,33 +41,48 @@ async def on_message(msg):
         return
 
     elif msg.content.startswith('$targetchannel'):
+        global targetchannel
         targetchannel = msg.channel
-        response = '/`Orsik will respond with In-Character messages in {0}/`'.format(str(targetchannel))
-        bot.send_message(msg.channel, response)
+        response = '`Orsik will respond with In-Character messages in {0}`'.format(str(targetchannel))
+        print('$targetchannel is {}'.format(targetchannel))
+        await bot.send_message(msg.channel, response)
+        return
 
-#In character interactions
-    elif msg.content.startswith('Orsik'):
+#Trigger for in-character interactions
+    elif msg.content.startswith('Orsik') and msg.author != bot.user:
         
         user = msg.author
         name = user.display_name
+        statement = msg.content
+        statement = statement[4:]
 
-        if targetchannel != str(msg.channel):
-            response = '/`Orsik BOT has not been assigned to {}/`'.format(str(targetchannel))
-            bot.send_message(msg.channel, response)
-            return
+#If it is not the assigned channel, lets the user know
+        if msg.channel != targetchannel:
+            response = '`Orsik BOT is assigned to {}`'.format(str(targetchannel))
+            await bot.send_message(msg.channel, response)
+            return            
 
-        elif msg.content.find('Flint') and msg.content.find('?'):
-            response = 'Flint, not a better Dwarf to fight alongside.'
-            
-        else:
+#General response to a name
+        elif msg.content == 'Orsik':
             ya = random.choice(affirm)
             aid = random.choice(assit)
-            response =  '{0} {1}, how can I {2} you?'.format(ya.capitalize(), name.capitalize(), aid)
+            response =  '{0} {1}, how can I {2} you?'.format(ya.capitalize(), name.capitalize(), aid)           
+
+#For questions, targets context and answers the question            
+        elif statement.endswith('?'):
+            keyword = qkeyword(msg.content)
+            response = expertise(keyword)
+
+        else:
+            response = random.choice(nr_actions)
            
     else:
         return
     
-    await bot.send_message(targetchannel, response)
+    if targetchannel == 'null':
+        await bot.send_message(msg.channel, 'Please assign Orsik to a channel with $targetchannel')
+    else:
+        await bot.send_message(targetchannel, response)
 
 #@bot.event
 #async def on_member_update(old_state,new_state):
@@ -76,10 +90,12 @@ async def on_message(msg):
 
 #    await bot.send_message(hello)
 
-@bot.command(name='close') #not currently working
-async def close(ctx):
-#    await bot.send_message(ctx.channel, "Closing down folks.")
+@bot.command() #not currently working
+async def shutter():
+    print('Closing connection to server for bot')
+    await bot.send_message(targetchannel, "Closing down folks.")
     await bot.close()
+    return
 
 @bot.event
 async def on_ready():
@@ -89,8 +105,44 @@ async def on_ready():
     print("ID: {}".format(bot.user.id))
     print("-------")
     #Indicate how to interact
+    global targetchannel
+    targetchannel = 'null' #inital setting prior to in-Discord reset
+    print('$targetchannel is {}'.format(targetchannel))
+
     await bot.change_presence(game=discord.Game(name='Behind the bar'))
     
+
+#resused functions
+def qkeyword(sentence):
+    words = sentence.split()
+    word = words[-1:]
+    word = word[0]
+    word = word[:-1]
+    return word
+
+def expertise(word):
+    #Flint
+    if word == 'Flint':
+        sentence = random.choice(flint) #says what Orsik thinks of flint
+
+    #Ale
+    elif word.lower() == 'ale':
+        sentence = random.choice(ale) #offers up some info on ales
+
+    #Inn
+    elif word.lower() == 'inn':
+        inn = random.choice(inns) #randomly chooses an inn to discuss
+        inn = list(inn) #converts tuple to a list
+        name= inn[0]
+        direction = inn[2]
+        quarter = inn[1]
+        sentence = "You might try the {0}. It is around the {1} of {2}.".format(name, direction, quarter)
+    else:
+        sentence = "Sorry, I am not familar.  Perhaps you get a hold of one of Volo's guides."
+        #if he doesn't know anything about it, he suggests finding a guide by the famous Volo.
+
+    return sentence
+
 
 #Source List and Tuples
 greetings = ["hello", "hi", "hey", "good day"]
@@ -99,15 +151,19 @@ affirm = ["yes", "aye", "ya"]
 
 assit = ["help", "aid", "assist"]
 
+flint = ["Flint? One of the best dwarfs I know.", " True champion of Moradin.", "Saved my life more than once."]
+
+ale = ["I carry Mithral Ale and a local ale, a light blonde.", "Sorry, I do not have the range to be found in the Dwarven Holds of the North.", "No, better beverage."]
+
 nr_actions = ["_is cleaning out a recently finished tankard._",
               "_wipes down the bar._", "_seems to be in deep thought._"]
 
-inns = [("Old Hold",  "Lower City", "near the Gate", "Dwarfs", ""),
-        ("Blushing Mermaid", "Lower City", "northeast", "shady"),
-        ("Blade and Stars", "Lower City", "southeast", "comfortable", ),
-        ("Helm and Cloak", "Upper City", "northwest", "luxury", "expensive"),
-        ("Splurging Sturgeon", "Lower City", "northeast", "good",  "cheap" ),
-        ("Purple Wyrm Inn and Tavern","Lower City", "central", "quality", "what you would expect"),
+inns = [("Old Hold",  "Lower City", "Gate", "Dwarfs", ""),
+        ("Blushing Mermaid", "Lower City", "northeast area", "shady", ""),
+        ("Blade and Stars", "Lower City", "southeast part", "comfortable", "not bad"),
+        ("Helm and Cloak", "Upper City", "northwest blocks", "luxury", "expensive"),
+        ("Splurging Sturgeon", "Lower City", "northeast part", "good",  "cheap" ),
+        ("Purple Wyrm Inn and Tavern","Lower City", "central area", "quality", "what you would expect"),
         ("Three Old Kegs", "Upper City", "east wall of the Ducal Palace", "excellent", "good")]
 
 taverns = [("Elfsong Tavern", "Lower City", "southeast", "quality, but haunting", "bit pricy")]
