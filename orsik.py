@@ -53,8 +53,14 @@ async def on_message(msg):
         
         user = msg.author
         name = user.display_name
+
+#formats the statement for further analysis
         statement = msg.content
-        statement = statement[4:]
+        print(statement[5])
+        if statement[5] == ",":
+            statement = statement[6:]
+        else:
+            statement = statement[5:]
 
 #If it is not the assigned channel, lets the user know
         if msg.channel != targetchannel:
@@ -68,10 +74,14 @@ async def on_message(msg):
             aid = random.choice(assit)
             response =  '{0} {1}, how can I {2} you?'.format(ya.capitalize(), name.capitalize(), aid)           
 
+#This section is the meat of the bots responses
+#1 statement analysis and identification
+#1a information, response, or question?
+#1b 
 #For questions, targets context and answers the question            
         elif statement.endswith('?'):
-            keyword = qkeyword(msg.content)
-            response = expertise(keyword)
+            [qtype, target] = question(statement)
+            response = expertise(target)
 
         else:
             response = random.choice(nr_actions)
@@ -112,13 +122,17 @@ async def on_ready():
     await bot.change_presence(game=discord.Game(name='Behind the bar'))
     
 
-#resused functions
-def qkeyword(sentence):
+#statement reading/response generating functions
+def question(sentence):
     words = sentence.split()
+    qtype = words[0]
     word = words[-1:]
     word = word[0]
     word = word[:-1]
-    return word
+    return [qtype, word]
+
+def drink(desired):
+    return
 
 def expertise(word):
     #Flint
