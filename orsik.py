@@ -1,8 +1,6 @@
 #Orsik, Dwarf male, operator of the Empty Tankard
 
-
 #Client ID 349695599186280448
-
 #To add to a server, https://discordapp.com/oauth2/authorize?client_id=349695599186280448&scope=bot&permissions=0
 
 import discord
@@ -16,8 +14,6 @@ def gettoken(file):
         for line in f:
             token=str(line)
     return token
-
-
 
 #Discord setup functions
 bot = discord.Client()
@@ -56,11 +52,13 @@ async def on_message(msg):
 
 #formats the statement for further analysis
         statement = msg.content
-        print(statement[5])
-        if statement[5] == ",":
-            statement = statement[6:]
-        else:
-            statement = statement[5:]
+        if len(statement) < 6:
+            statement = msg.content
+        elif len(statement) > 5:
+            if statement[5] == ",":
+                statement = statement[6:]
+            else:
+                statement = statement[5:]
 
 #If it is not the assigned channel, lets the user know
         if msg.channel != targetchannel:
@@ -74,10 +72,8 @@ async def on_message(msg):
             aid = random.choice(assit)
             response =  '{0} {1}, how can I {2} you?'.format(ya.capitalize(), name.capitalize(), aid)           
 
-#This section is the meat of the bots responses
-#1 statement analysis and identification
-#1a information, response, or question?
-#1b 
+#This section is the meat of the bots responses, it is where most of the change will occur
+
 #For questions, targets context and answers the question            
         elif statement.endswith('?'):
             [qtype, target] = question(statement)
